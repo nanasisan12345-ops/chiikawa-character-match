@@ -1,4 +1,4 @@
-import { TRAITS, questions, characters } from "./data.js";
+import { TRAITS, questions, characters } from "./data.js?v=3";
 export const TRAIT_WEIGHTS = Object.fromEntries(TRAITS.map((key) => [key, 1]));
 export function calculateTraits(answers) {
   if (

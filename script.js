@@ -1,11 +1,11 @@
-import { characters, TRAITS, TRAIT_LABELS } from "./data.js";
-import { diagnose, simulateDiagnoses, getMatchReasons } from "./engine.js?v=2";
+import { characters, TRAITS, TRAIT_LABELS } from "./data.js?v=3";
+import { diagnose, simulateDiagnoses, getMatchReasons } from "./engine.js?v=3";
 import {
   createQuestionSet,
   getQuestion,
   canonicalAnswers,
-} from "./question-bank.js";
-import { loadProgress, saveProgress, clearProgress } from "./storage.js?v=2";
+} from "./question-bank.js?v=3";
+import { loadProgress, saveProgress, clearProgress } from "./storage.js?v=3";
 const app = document.querySelector("#app"),
   debug = new URLSearchParams(location.search).get("debug") === "1",
   reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -77,7 +77,7 @@ function mount(html, focus = true) {
 function renderStart() {
   view = progress ? "resume" : "start";
   mount(
-    `<section class="hero"><div class="eyebrow">28 QUESTIONS, YOUR OWN STORY</div><div class="hero-art" aria-hidden="true"><i class="orb pink"></i><i class="orb blue"></i><i class="orb yellow"></i><b class="spark one">${star}</b><b class="spark two">${star}</b><span class="art-label">20 types of personality</span></div><p class="hero-kicker">ちいかわキャラマッチ</p><h1 tabindex="-1">あなたにいちばん<br>近いのは<span class="underline">誰？</span></h1><p class="hero-description">やさしいところも、自由なところも。<br>毎回変わる28の場面から、あなたらしさを発見。<br>ちいかわの世界なら、あなたはどうする？</p><div class="facts"><span>全28問</span><i></i><span>約3〜4分</span><i></i><span>登録不要</span></div>${progress ? `<div class="resume card"><p>診断の途中データがあります</p><button class="primary" data-action="resume">続きから<span aria-hidden="true">→</span></button><button class="text-button" data-action="fresh">最初から</button></div>` : `<button class="primary start-button" data-action="fresh">診断をはじめる<span aria-hidden="true">→</span></button>`}<p class="small-note">84シーンから毎回28問。前回とは違う質問で楽しめます。<br>うち10問は、ちいかわの世界を参考にした独自の場面です。</p></section><section class="intro-strip"><div><b>01</b><span>直感で答える</span></div><div><b>02</b><span>性格を分析</span></div><div><b>03</b><span>TOP3に出会う</span></div></section><section class="character-section"><span class="eyebrow">MEET THE TYPES</span><h2>診断に登場する20キャラクター</h2><p>あなたの中に、どんな一面があるでしょう。</p><div class="character-chips">${characters.map((c) => `<span class="character-chip"><i style="background:${c.theme}" aria-hidden="true"></i>${c.name}</span>`).join("")}</div></section><aside class="about-note"><b>この診断について</b><p>回答の傾向と、本サイト独自の性格モデルを比較します。結果はあなたを決めつけるものではなく、自分の一面を楽しむためのヒントです。</p></aside>`,
+    `<section class="hero"><div class="eyebrow">28 QUESTIONS, YOUR OWN STORY</div><div class="hero-art" aria-hidden="true"><i class="orb pink"></i><i class="orb blue"></i><i class="orb yellow"></i><b class="spark one">${star}</b><b class="spark two">${star}</b><span class="art-label">20 types of personality</span></div><p class="hero-kicker">ちいかわキャラマッチ</p><h1 tabindex="-1">あなたにいちばん<br>近いのは<span class="underline">誰？</span></h1><p class="hero-description">やさしいところも、自由なところも。<br>毎回変わる28の場面から、あなたらしさを発見。<br>ちいかわの世界なら、あなたはどうする？</p><div class="facts"><span>全28問</span><i></i><span>約3〜4分</span><i></i><span>登録不要</span></div>${progress ? `<div class="resume card"><p>診断の途中データがあります</p><button class="primary" data-action="resume">続きから<span aria-hidden="true">→</span></button><button class="text-button" data-action="fresh">最初から</button></div>` : `<button class="primary start-button" data-action="fresh">診断をはじめる<span aria-hidden="true">→</span></button>`}<p class="small-note">140シーンから毎回28問。前回とは違う質問で楽しめます。<br>うち20問は、ちいかわの世界を参考にした独自の場面です。</p></section><section class="intro-strip"><div><b>01</b><span>直感で答える</span></div><div><b>02</b><span>性格を分析</span></div><div><b>03</b><span>TOP3に出会う</span></div></section><section class="character-section"><span class="eyebrow">MEET THE TYPES</span><h2>診断に登場する20キャラクター</h2><p>あなたの中に、どんな一面があるでしょう。</p><div class="character-chips">${characters.map((c) => `<span class="character-chip"><i style="background:${c.theme}" aria-hidden="true"></i>${c.name}</span>`).join("")}</div></section><aside class="about-note"><b>この診断について</b><p>回答の傾向と、本サイト独自の性格モデルを比較します。結果はあなたを決めつけるものではなく、自分の一面を楽しむためのヒントです。</p></aside>`,
     false,
   );
 }

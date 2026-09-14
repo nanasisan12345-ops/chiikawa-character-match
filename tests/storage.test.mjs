@@ -78,3 +78,13 @@ test("v2の質問の並びと回答を保ち、不正な質問セットを拒否
     null,
   );
 });
+test("追加前のv2出題も、追加した種類3・4もそのまま再開できる", () => {
+  for (const variants of [[0, 1, 2], [3, 4]]) {
+    const questionSet = Array.from({ length: 28 }, (_, slot) => ({
+      slot,
+      variant: variants[slot % variants.length],
+    })).reverse();
+    const saved = { ...valid(), version: 2, questionSet };
+    assert.deepEqual(validateProgress(saved), saved);
+  }
+});

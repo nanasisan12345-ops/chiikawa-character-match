@@ -1,5 +1,9 @@
 import { chromium } from "./browser-runtime.mjs";
-import { createQuestionSet, getQuestion } from "../question-bank.js";
+import {
+  createQuestionSet,
+  getQuestion,
+  questionBank,
+} from "../question-bank.js";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
 const context = await chromium.launchPersistentContext(
@@ -45,15 +49,15 @@ try {
     "true",
   );
   for (let slot = 0; slot < 28; slot++)
-    for (let variant = 0; variant < 3; variant++) {
+    for (let variant = 0; variant < questionBank[slot].length; variant++) {
       let set = createQuestionSet(100 + slot);
       const entry = set.find((q) => q.slot === slot);
       entry.variant = variant;
-      // テスト対象以外の枠で作品シーンを10問に揃える。
+      // テスト対象以外の枠で作品シーンを20問に揃える。
       for (const q of set.filter((q) => q.slot !== slot)) {
-        const count = set.filter((q) => q.variant === 2).length;
-        if (count > 10 && q.variant === 2) q.variant = 0;
-        else if (count < 10 && q.variant !== 2) q.variant = 2;
+        const count = set.filter((q) => getQuestion(q).story).length;
+        if (count > 20 && getQuestion(q).story) q.variant = 0;
+        else if (count < 20 && !getQuestion(q).story) q.variant = 2;
       }
       set = [entry, ...set.filter((q) => q.slot !== slot)];
       await page.evaluate(
@@ -113,7 +117,7 @@ try {
   });
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: legacy saved answers migrate without changing questions; all 84 scenes render at 320px with four >=60px buttons; result match reasons.",
+    "PASS: legacy saved answers migrate without changing questions; all 140 scenes render at 320px with four >=60px buttons; result match reasons.",
   );
 } finally {
   await context.close();

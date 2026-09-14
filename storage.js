@@ -1,5 +1,5 @@
-import { questions } from "./data.js";
-import { legacyQuestionSet, validateQuestionSet } from "./question-bank.js";
+import { questions } from "./data.js?v=3";
+import { legacyQuestionSet, validateQuestionSet } from "./question-bank.js?v=3";
 export const STORAGE_KEY = "chiikawa-character-match:v1";
 export function validateProgress(value) {
   if (
