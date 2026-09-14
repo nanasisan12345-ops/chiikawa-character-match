@@ -22,14 +22,19 @@ await page.locator(".character-chip").last().waitFor();
 assert.equal(await page.locator(".character-chip").count(), 20);
 await page.screenshot({ path: "artifacts/home-desktop.png", fullPage: true });
 await page.getByRole("button", { name: "診断をはじめる" }).click();
-await page.getByRole("button", { name: "とてもそう思う", exact: true }).click();
+const firstQuestion = await page.locator(".question-card h1").textContent();
+await page.locator('[data-answer="3"]').click();
 await page.locator(".question-number").filter({ hasText: "Q02" }).waitFor();
 await page.getByRole("button", { name: "前の質問" }).click();
 assert.equal(
   await page.locator('[data-answer="3"]').getAttribute("aria-pressed"),
   "true",
 );
-await page.getByRole("button", { name: "ややそう思う", exact: true }).click();
+assert.equal(
+  await page.locator(".question-card h1").textContent(),
+  firstQuestion,
+);
+await page.locator('[data-answer="2"]').click();
 await page.locator(".question-number").filter({ hasText: "Q02" }).waitFor();
 await page.reload();
 await page.getByRole("button", { name: "続きから", exact: false }).click();
@@ -57,14 +62,21 @@ assert.equal(
   await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
   true,
 );
+const previous = await page.evaluate(
+  () =>
+    JSON.parse(localStorage.getItem("chiikawa-character-match:v1")).questionSet,
+);
 await page.getByRole("button", { name: "もう一度診断する" }).click();
 assert.equal(await page.locator(".question-number").textContent(), "Q01");
-assert.equal(
-  await page.evaluate(() =>
-    localStorage.getItem("chiikawa-character-match:v1"),
-  ),
-  null,
+const restarted = await page.evaluate(() =>
+  JSON.parse(localStorage.getItem("chiikawa-character-match:v1")),
 );
+assert.ok(restarted.answers.every((a) => a === null));
+assert.equal(restarted.version, 2);
+for (const q of restarted.questionSet)
+  assert.ok(
+    !previous.some((p) => p.slot === q.slot && p.variant === q.variant),
+  );
 assert.deepEqual(errors, []);
 console.log(
   "PASS: top → answer → back/change → reload/resume → all 28 → TOP3/chart → reload → reset; no page errors.",

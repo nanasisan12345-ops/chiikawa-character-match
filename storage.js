@@ -1,9 +1,10 @@
 import { questions } from "./data.js";
+import { legacyQuestionSet, validateQuestionSet } from "./question-bank.js";
 export const STORAGE_KEY = "chiikawa-character-match:v1";
 export function validateProgress(value) {
   if (
     !value ||
-    value.version !== 1 ||
+    ![1, 2].includes(value.version) ||
     !Array.isArray(value.answers) ||
     value.answers.length !== questions.length ||
     !Number.isInteger(value.currentQuestion) ||
@@ -22,11 +23,15 @@ export function validateProgress(value) {
   }
   const first = answers.indexOf(null);
   if (first !== -1 && value.currentQuestion > first) return null;
+  const questionSet =
+    value.version === 1 ? legacyQuestionSet() : value.questionSet;
+  if (!validateQuestionSet(questionSet)) return null;
   return {
-    version: 1,
+    version: 2,
     currentQuestion: value.currentQuestion,
     answers,
     startedAt: value.startedAt,
+    questionSet: questionSet.map(({ slot, variant }) => ({ slot, variant })),
   };
 }
 export function loadProgress(storage) {

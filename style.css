@@ -11,6 +11,60 @@
   background: var(--bg-main);
   font-synthesis: none;
 }
+.scene-badge {
+  display: table;
+  margin: 0 auto 18px;
+  padding: 6px 13px;
+  border-radius: 20px;
+  background: #eeeae2;
+  font-size: 11px;
+  color: #685c51;
+}
+.scene-badge.story {
+  background: #f9e5ae;
+  color: #695132;
+}
+.comparison-note {
+  font-size: 12px;
+  color: #756b63;
+  line-height: 1.8;
+  margin-bottom: 18px;
+}
+.rank-detail {
+  flex: 1;
+  min-width: 0;
+}
+.rank-detail > b {
+  display: block;
+}
+.rank-detail > small {
+  display: block;
+  line-height: 1.65;
+  color: #756b63;
+  font:
+    10px "Yu Gothic UI",
+    Meiryo,
+    sans-serif;
+  margin-top: 6px;
+}
+.rank-meter {
+  height: 6px;
+  border-radius: 8px;
+  background: #f0ece5;
+  margin-top: 9px;
+  overflow: hidden;
+}
+.rank-meter > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+.answer-button {
+  line-height: 1.6;
+}
+.answer-button .selection-mark {
+  flex-shrink: 0;
+}
 .hero {
   text-align: center;
 }

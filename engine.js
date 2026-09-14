@@ -80,17 +80,41 @@ export function rankCharacters(userTraits, roster = characters) {
         (sum, key) => sum + (userTraits[key] - character.traits[key]) ** 2,
         0,
       );
+      let dot = 0,
+        userNorm = 0,
+        characterNorm = 0;
+      for (const key of TRAITS) {
+        const x = userTraits[key] - 50,
+          y = character.traits[key] - 50,
+          w = TRAIT_WEIGHTS[key];
+        dot += w * x * y;
+        userNorm += w * x * x;
+        characterNorm += w * y * y;
+      }
+      const cosine =
+        userNorm < 1e-10
+          ? 0
+          : Math.max(
+              -1,
+              Math.min(1, dot / Math.sqrt(userNorm * characterNorm)),
+            );
+      const directionDistance =
+        userNorm < 1e-10 ? distance : Math.sqrt(2 - 2 * cosine);
       return {
         character,
         distance,
         primaryDistance,
-        similarity: calculateSimilarity(distance),
+        // 0=共通する特徴の方向がない、100=特徴の方向が完全一致。
+        // 全キャラ共通の平方根スケール。順位への固定加点・乱数補正はしない。
+        similarity: Math.round(100 * Math.sqrt(Math.max(0, cosine))),
+        directionDistance,
+        cosine,
         index,
       };
     })
     .sort(
       (a, b) =>
-        a.distance - b.distance ||
+        a.directionDistance - b.directionDistance ||
         a.primaryDistance - b.primaryDistance ||
         a.index - b.index,
     );
@@ -123,3 +147,32 @@ export function simulateDiagnoses(count = 10000, seed = 20260914) {
   }));
 }
 export const runRandomSimulation = simulateDiagnoses;
+
+const traitPhrases = {
+  sociability: ["少人数でじっくり", "人との交流を楽しむ"],
+  cautiousness: ["思い切りよく動く", "慎重に確かめる"],
+  activity: ["考えてから動く", "まず行動に移す"],
+  selfExpression: ["控えめに思いを伝える", "自分の思いを表す"],
+  calmness: ["気持ちが動きやすい", "落ち着いて受け止める"],
+  responsibility: ["柔軟に役割を変える", "責任を持ってやり切る"],
+  diligence: ["その時の興味を大切に", "地道に積み重ねる"],
+  empathy: ["自分の気持ちも大切に", "人の気持ちに寄り添う"],
+  independence: ["周りと相談して進む", "自分の判断で進む"],
+  sensitivity: ["細かなことを引きずらない", "小さな変化に気づく"],
+  curiosity: ["慣れたものを楽しむ", "新しいことを試す"],
+  optimism: ["先の心配もよく考える", "前向きに切り替える"],
+  leadership: ["支える役割を大切に", "先頭に立って導く"],
+  creativity: ["決まった方法を活かす", "工夫して形にする"],
+  cooperation: ["自分のペースを大切に", "仲間と力を合わせる"],
+  emotionalIntensity: ["穏やかに感情を受け止める", "思いを強く持つ"],
+};
+export function getMatchReasons(traits, character) {
+  return TRAITS.map((key) => ({
+    key,
+    strength: (traits[key] - 50) * (character.traits[key] - 50),
+  }))
+    .filter((x) => x.strength > 20)
+    .sort((a, b) => b.strength - a.strength)
+    .slice(0, 2)
+    .map((x) => traitPhrases[x.key][traits[x.key] >= 50 ? 1 : 0]);
+}

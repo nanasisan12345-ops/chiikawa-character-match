@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { createQuestionSet } from "../question-bank.js";
 import {
   validateProgress,
   loadProgress,
@@ -21,7 +22,10 @@ test("保存・読み込み・削除が他のデータを触らない", () => {
     removeItem: (k) => map.delete(k),
   };
   assert.ok(saveProgress(storage, valid()));
-  assert.deepEqual(loadProgress(storage).data, valid());
+  const restored = loadProgress(storage).data;
+  assert.deepEqual(restored.answers, valid().answers);
+  assert.equal(restored.version, 2);
+  assert.equal(restored.questionSet.length, 28);
   assert.ok(clearProgress(storage));
   assert.equal(map.has(STORAGE_KEY), false);
   assert.equal(map.get("other"), "keep");
@@ -54,4 +58,23 @@ test("ストレージ拒否・容量不足でも例外を外に出さない", ()
   assert.ok(loadProgress(denied).error);
   assert.equal(saveProgress(denied, valid()), false);
   assert.equal(clearProgress(denied), false);
+});
+test("v2の質問の並びと回答を保ち、不正な質問セットを拒否", () => {
+  const v = { ...valid(), version: 2, questionSet: createQuestionSet(77) };
+  assert.deepEqual(validateProgress(v), v);
+  assert.equal(
+    validateProgress({ ...v, questionSet: v.questionSet.slice(1) }),
+    null,
+  );
+  assert.equal(
+    validateProgress({ ...v, questionSet: Array(28).fill(v.questionSet[0]) }),
+    null,
+  );
+  assert.equal(
+    validateProgress({
+      ...v,
+      questionSet: v.questionSet.map((q) => ({ ...q, variant: 99 })),
+    }),
+    null,
+  );
 });

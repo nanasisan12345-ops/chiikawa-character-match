@@ -15,6 +15,7 @@ const allowed = new Set([
   "data.js",
   "engine.js",
   "storage.js",
+  "question-bank.js",
   "favicon.svg",
   "images/ogp.png",
 ]);

@@ -1,12 +1,11 @@
+import { characters, TRAITS, TRAIT_LABELS } from "./data.js";
+import { diagnose, simulateDiagnoses, getMatchReasons } from "./engine.js?v=2";
 import {
-  questions,
-  characters,
-  TRAITS,
-  TRAIT_LABELS,
-  ANSWER_LABELS,
-} from "./data.js";
-import { diagnose, simulateDiagnoses } from "./engine.js";
-import { loadProgress, saveProgress, clearProgress } from "./storage.js";
+  createQuestionSet,
+  getQuestion,
+  canonicalAnswers,
+} from "./question-bank.js";
+import { loadProgress, saveProgress, clearProgress } from "./storage.js?v=2";
 const app = document.querySelector("#app"),
   debug = new URLSearchParams(location.search).get("debug") === "1",
   reduced = matchMedia("(prefers-reduced-motion: reduce)");
@@ -44,7 +43,11 @@ function persist() {
   if (!saveProgress(storage, progress))
     notify("途中保存ができません。画面を閉じずに診断を続けてください。");
 }
+function currentResult() {
+  return diagnose(canonicalAnswers(progress.answers, progress.questionSet));
+}
 function fresh() {
+  const previousSet = progress?.questionSet || [];
   clearTimeout(timer);
   busy = false;
   if (!clearProgress(storage))
@@ -52,11 +55,16 @@ function fresh() {
       "保存データを削除できませんでした。この画面では最初から診断します。",
     );
   progress = {
-    version: 1,
+    version: 2,
+    questionSet: createQuestionSet(
+      crypto.getRandomValues(new Uint32Array(1))[0],
+      previousSet,
+    ),
     answers: Array(28).fill(null),
     currentQuestion: 0,
     startedAt: new Date().toISOString(),
   };
+  persist();
   renderQuestion();
 }
 function mount(html, focus = true) {
@@ -69,7 +77,7 @@ function mount(html, focus = true) {
 function renderStart() {
   view = progress ? "resume" : "start";
   mount(
-    `<section class="hero"><div class="eyebrow">28 QUESTIONS, YOUR OWN STORY</div><div class="hero-art" aria-hidden="true"><i class="orb pink"></i><i class="orb blue"></i><i class="orb yellow"></i><b class="spark one">${star}</b><b class="spark two">${star}</b><span class="art-label">20 types of personality</span></div><p class="hero-kicker">ちいかわキャラマッチ</p><h1 tabindex="-1">あなたにいちばん<br>近いのは<span class="underline">誰？</span></h1><p class="hero-description">やさしいところも、自由なところも。<br>28の質問から、あなたらしさをひもといて<br>20キャラクターの中から近いタイプを見つけます。</p><div class="facts"><span>全28問</span><i></i><span>約3〜4分</span><i></i><span>登録不要</span></div>${progress ? `<div class="resume card"><p>診断の途中データがあります</p><button class="primary" data-action="resume">続きから<span aria-hidden="true">→</span></button><button class="text-button" data-action="fresh">最初から</button></div>` : `<button class="primary start-button" data-action="fresh">診断をはじめる<span aria-hidden="true">→</span></button>`}<p class="small-note">正解はありません。いつもの自分で答えてみて。</p></section><section class="intro-strip"><div><b>01</b><span>直感で答える</span></div><div><b>02</b><span>性格を分析</span></div><div><b>03</b><span>TOP3に出会う</span></div></section><section class="character-section"><span class="eyebrow">MEET THE TYPES</span><h2>診断に登場する20キャラクター</h2><p>あなたの中に、どんな一面があるでしょう。</p><div class="character-chips">${characters.map((c) => `<span class="character-chip"><i style="background:${c.theme}" aria-hidden="true"></i>${c.name}</span>`).join("")}</div></section><aside class="about-note"><b>この診断について</b><p>回答の傾向と、本サイト独自の性格モデルを比較します。結果はあなたを決めつけるものではなく、自分の一面を楽しむためのヒントです。</p></aside>`,
+    `<section class="hero"><div class="eyebrow">28 QUESTIONS, YOUR OWN STORY</div><div class="hero-art" aria-hidden="true"><i class="orb pink"></i><i class="orb blue"></i><i class="orb yellow"></i><b class="spark one">${star}</b><b class="spark two">${star}</b><span class="art-label">20 types of personality</span></div><p class="hero-kicker">ちいかわキャラマッチ</p><h1 tabindex="-1">あなたにいちばん<br>近いのは<span class="underline">誰？</span></h1><p class="hero-description">やさしいところも、自由なところも。<br>毎回変わる28の場面から、あなたらしさを発見。<br>ちいかわの世界なら、あなたはどうする？</p><div class="facts"><span>全28問</span><i></i><span>約3〜4分</span><i></i><span>登録不要</span></div>${progress ? `<div class="resume card"><p>診断の途中データがあります</p><button class="primary" data-action="resume">続きから<span aria-hidden="true">→</span></button><button class="text-button" data-action="fresh">最初から</button></div>` : `<button class="primary start-button" data-action="fresh">診断をはじめる<span aria-hidden="true">→</span></button>`}<p class="small-note">84シーンから毎回28問。前回とは違う質問で楽しめます。<br>うち10問は、ちいかわの世界を参考にした独自の場面です。</p></section><section class="intro-strip"><div><b>01</b><span>直感で答える</span></div><div><b>02</b><span>性格を分析</span></div><div><b>03</b><span>TOP3に出会う</span></div></section><section class="character-section"><span class="eyebrow">MEET THE TYPES</span><h2>診断に登場する20キャラクター</h2><p>あなたの中に、どんな一面があるでしょう。</p><div class="character-chips">${characters.map((c) => `<span class="character-chip"><i style="background:${c.theme}" aria-hidden="true"></i>${c.name}</span>`).join("")}</div></section><aside class="about-note"><b>この診断について</b><p>回答の傾向と、本サイト独自の性格モデルを比較します。結果はあなたを決めつけるものではなく、自分の一面を楽しむためのヒントです。</p></aside>`,
     false,
   );
 }
@@ -77,9 +85,9 @@ function renderQuestion() {
   view = "question";
   busy = false;
   const i = progress.currentQuestion,
-    q = questions[i];
+    q = getQuestion(progress.questionSet[i]);
   mount(
-    `<section class="question-screen"><div class="question-top"><span class="eyebrow">QUESTION</span><span class="question-count"><b>${String(i + 1).padStart(2, "0")}</b> / 28</span></div><div class="progress-track" role="progressbar" aria-label="回答の進み具合" aria-valuemin="0" aria-valuemax="28" aria-valuenow="${i}"><div style="width:${(i / 28) * 100}%"></div></div><p class="question-hint">いつものあなたに、いちばん近いものを。</p><div class="card question-card"><span class="question-number">Q${String(i + 1).padStart(2, "0")}</span><h1 tabindex="-1">${q.text}</h1><div class="answer-list" role="group" aria-label="回答を選択">${[3, 2, 1, 0].map((v, n) => `<button class="answer-button ${progress.answers[i] === v ? "selected" : ""}" data-answer="${v}" aria-pressed="${progress.answers[i] === v}"><span class="answer-symbol symbol-${n}" aria-hidden="true"></span>${ANSWER_LABELS[v]}<span class="selection-mark" aria-hidden="true">${progress.answers[i] === v ? "✓" : "→"}</span></button>`).join("")}</div></div><div class="question-bottom"><button class="text-button" data-action="back" ${i === 0 ? "disabled" : ""}>← 前の質問</button><span>あと${28 - i}問</span></div><p class="save-note">回答はこのブラウザに保存されます。途中でも再開できます。</p><button class="text-button home-button" data-action="home">トップへ戻る</button></section>`,
+    `<section class="question-screen"><div class="question-top"><span class="eyebrow">QUESTION</span><span class="question-count"><b>${String(i + 1).padStart(2, "0")}</b> / 28</span></div><div class="progress-track" role="progressbar" aria-label="回答の進み具合" aria-valuemin="0" aria-valuemax="28" aria-valuenow="${i}"><div style="width:${(i / 28) * 100}%"></div></div><p class="question-hint">${q.story ? "ちいかわの世界で、あなたならどうする？" : "この場面で、いつものあなたなら？"}</p><span class="scene-badge ${q.story ? "story" : ""}">${q.story ? "ちいかわの世界" : "日常のひとこま"}</span><div class="card question-card"><span class="question-number">Q${String(i + 1).padStart(2, "0")}</span><h1 tabindex="-1">${q.text}</h1><div class="answer-list" role="group" aria-label="回答を選択">${[3, 2, 1, 0].map((v, n) => `<button class="answer-button ${progress.answers[i] === v ? "selected" : ""}" data-answer="${v}" aria-pressed="${progress.answers[i] === v}"><span class="answer-symbol symbol-${n}" aria-hidden="true"></span>${q.options[v]}<span class="selection-mark" aria-hidden="true">${progress.answers[i] === v ? "✓" : "→"}</span></button>`).join("")}</div></div><div class="question-bottom"><button class="text-button" data-action="back" ${i === 0 ? "disabled" : ""}>← 前の質問</button><span>あと${28 - i}問</span></div><p class="save-note">回答はこのブラウザに保存されます。途中でも再開できます。</p><button class="text-button home-button" data-action="home">トップへ戻る</button></section>`,
   );
 }
 function answer(value) {
@@ -108,13 +116,13 @@ function answer(value) {
 }
 function analyze() {
   view = "analyzing";
-  const result = diagnose(progress.answers);
+  const result = currentResult();
   mount(
     `<section class="card analyzing"><span class="analysis-star">${star}</span><p class="eyebrow">FINDING YOUR MATCH</p><h1 tabindex="-1">あなたの性格を分析中…</h1><p>20のタイプと、あなたらしさを照らし合わせています。</p></section>`,
   );
   timer = setTimeout(() => renderResult(result), reduced.matches ? 0 : 900);
 }
-function renderResult(result = diagnose(progress.answers)) {
+function renderResult(result = currentResult()) {
   view = "result";
   busy = false;
   const [first, ...rest] = result.ranking.slice(0, 3),
@@ -141,15 +149,15 @@ function renderResult(result = diagnose(progress.answers)) {
     ["こんな場面が得意", c.scenes],
   ];
   mount(
-    `<div class="result-page" style="--theme:${c.theme}"><section class="card result-hero"><span class="eyebrow">YOUR CHARACTER MATCH</span><div class="result-emblem" aria-hidden="true">${star}</div><p class="result-pretitle">診断結果 · あなたにいちばん近いのは</p><span class="rank-label">1位</span><h1 tabindex="-1">${c.name}<span>タイプ！</span></h1><p class="type-name">${c.typeName}</p><div class="match-score"><span>MATCH</span><b>${first.similarity}<small>%</small></b><span>類似度</span></div><p class="result-caption">${neutral ? "同じ回答が続いたため、性格の差が少ない参考結果です。<br>いつもの自分を思い浮かべて、答え直すこともできます。" : "あなたらしさが、ひとつ見つかりました。"}</p></section><section class="card top-three"><h2>あなたに近いキャラ TOP3</h2>${result.ranking
+    `<div class="result-page" style="--theme:${c.theme}"><section class="card result-hero"><span class="eyebrow">YOUR CHARACTER MATCH</span><div class="result-emblem" aria-hidden="true">${star}</div><p class="result-pretitle">診断結果 · あなたにいちばん近いのは</p><span class="rank-label">1位</span><h1 tabindex="-1">${c.name}<span>タイプ！</span></h1><p class="type-name">${c.typeName}</p><div class="match-score"><span>MATCH</span><b>${first.similarity}<small>%</small></b><span>タイプ一致度</span></div><p class="result-caption">${neutral ? "同じ回答が続いたため、性格の差が少ない参考結果です。<br>いつもの自分を思い浮かべて、答え直すこともできます。" : "あなたらしさが、ひとつ見つかりました。"}</p></section><section class="card top-three"><h2>あなたに近いキャラ TOP3</h2><p class="comparison-note">${neutral ? "回答の特徴が中立のため、今回は参考結果です。" : first.similarity - result.ranking[1].similarity < 5 ? "いくつかのタイプが近い、ミックスタイプ。重なる特徴を見比べてみて。" : "あなたと重なる特徴が多い順に並んでいます。"}</p>${result.ranking
       .slice(0, 3)
       .map(
         (r, i) =>
-          `<div class="rank-row"><span>${String(i + 1).padStart(2, "0")}</span><i style="background:${r.character.theme}" aria-hidden="true"></i><b>${r.character.name}</b><strong>${r.similarity}<small>%</small></strong></div>`,
+          `<div class="rank-row"><span>${String(i + 1).padStart(2, "0")}</span><i style="background:${r.character.theme}" aria-hidden="true"></i><div class="rank-detail"><b>${r.character.name}</b><small>${getMatchReasons(result.traits, r.character).join(" / ") || "まだ目立った特徴はありません"}</small><div class="rank-meter" aria-hidden="true"><i style="width:${r.similarity}%;background:${r.character.theme}"></i></div></div><strong>${r.similarity}<small>%</small></strong></div>`,
       )
       .join(
         "",
-      )}</section><section class="card personality"><span class="eyebrow">A LITTLE MORE ABOUT YOU</span>${texts.map(([title, text], i) => `<article><h2><span>${String(i + 1).padStart(2, "0")}</span>${title}</h2><p>${text}</p></article>`).join("")}</section><section class="card chart"><span class="eyebrow">YOUR PERSONALITY</span><h2>あなたの性格バランス</h2><p>高い・低いに、良し悪しはありません。</p>${chart.map(([label, value]) => `<div class="chart-row"><span>${label}</span><div class="chart-track" role="meter" aria-label="${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(value)}"><div style="width:${value}%"></div></div><b>${Math.round(value)}</b></div>`).join("")}</section><section class="other-sides"><span class="eyebrow">ANOTHER SIDE OF YOU</span><h2>実はこんな一面も…</h2>${rest.map((r, i) => `<article class="card side-card" style="--side-theme:${r.character.theme}"><span class="side-rank">${i + 2}位</span><div><h3>${r.character.name}<small>${r.similarity}%</small></h3><b class="side-type">${r.character.typeName}</b><p>${r.character.description}</p></div></article>`).join("")}</section><section class="card share-card"><h2>あなたらしさ、シェアしてみる？</h2><p>友達の結果と見比べるのも、きっと楽しい。</p><button class="primary" data-action="share">結果をシェアする<span aria-hidden="true">→</span></button><button class="secondary" data-action="copy">URLをコピー</button><div id="share-fallback"></div></section><button class="restart-button" data-action="fresh">もう一度診断する <span aria-hidden="true">↻</span></button><p class="small-note">※診断結果は本サイト独自の性格分類です。<br>類似度は性格モデルとの近さを表し、確率ではありません。<br>共有URLには回答や個別結果は含まれません。</p>${debug ? `<details class="card debug"><summary>開発情報 / TOP20</summary><h3>User Trait Vector</h3><dl>${TRAITS.map((key, i) => `<dt>${TRAIT_LABELS[i]}</dt><dd>${result.traits[key].toFixed(1)}</dd>`).join("")}</dl><h3>Character Distances / Similarity Scores</h3><ol>${result.ranking.map((r) => `<li>${r.character.name} — 距離 ${r.distance.toFixed(2)} / ${r.similarity}%</li>`).join("")}</ol><button class="secondary" data-action="simulation">1万件シミュレーションを実行</button><div id="simulation-output"></div></details>` : ""}</div>`,
+      )}</section><section class="card personality"><span class="eyebrow">A LITTLE MORE ABOUT YOU</span>${texts.map(([title, text], i) => `<article><h2><span>${String(i + 1).padStart(2, "0")}</span>${title}</h2><p>${text}</p></article>`).join("")}</section><section class="card chart"><span class="eyebrow">YOUR PERSONALITY</span><h2>あなたの性格バランス</h2><p>高い・低いに、良し悪しはありません。</p>${chart.map(([label, value]) => `<div class="chart-row"><span>${label}</span><div class="chart-track" role="meter" aria-label="${label}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(value)}"><div style="width:${value}%"></div></div><b>${Math.round(value)}</b></div>`).join("")}</section><section class="other-sides"><span class="eyebrow">ANOTHER SIDE OF YOU</span><h2>実はこんな一面も…</h2>${rest.map((r, i) => `<article class="card side-card" style="--side-theme:${r.character.theme}"><span class="side-rank">${i + 2}位</span><div><h3>${r.character.name}<small>${r.similarity}%</small></h3><b class="side-type">${r.character.typeName}</b><p>${r.character.description}</p></div></article>`).join("")}</section><section class="card share-card"><h2>あなたらしさ、シェアしてみる？</h2><p>友達の結果と見比べるのも、きっと楽しい。</p><button class="primary" data-action="share">結果をシェアする<span aria-hidden="true">→</span></button><button class="secondary" data-action="copy">URLをコピー</button><div id="share-fallback"></div></section><button class="restart-button" data-action="fresh">もう一度診断する <span aria-hidden="true">↻</span></button><p class="small-note">※診断結果は本サイト独自の性格分類です。<br>タイプ一致度は性格の特徴の方向がどれだけ似ているかを表し、確率ではありません。<br>共有URLには回答や個別結果は含まれません。</p>${debug ? `<details class="card debug"><summary>開発情報 / TOP20</summary><h3>User Trait Vector</h3><dl>${TRAITS.map((key, i) => `<dt>${TRAIT_LABELS[i]}</dt><dd>${result.traits[key].toFixed(1)}</dd>`).join("")}</dl><h3>Character Distances / Similarity Scores</h3><ol>${result.ranking.map((r) => `<li>${r.character.name} — 距離 ${r.distance.toFixed(2)} / ${r.similarity}%</li>`).join("")}</ol><button class="secondary" data-action="simulation">1万件シミュレーションを実行</button><div id="simulation-output"></div></details>` : ""}</div>`,
   );
 }
 function publicUrl() {
@@ -165,6 +173,12 @@ async function copyText(text, success) {
     notify(success);
   } catch {
     const box = document.querySelector("#share-fallback");
+    if (!box) {
+      notify(
+        "コピーを利用できませんでした。結果画面でもう一度お試しください。",
+      );
+      return;
+    }
     box.innerHTML = `<label for="manual-copy">下の文章を選択してコピーしてください。</label><textarea id="manual-copy" readonly rows="6">${esc(text)}</textarea>`;
     box.querySelector("textarea").focus();
     box.querySelector("textarea").select();
@@ -172,7 +186,7 @@ async function copyText(text, success) {
   }
 }
 async function share() {
-  const c = diagnose(progress.answers).ranking[0].character;
+  const c = currentResult().ranking[0].character;
   const text = `「ちいかわキャラマッチ」をやってみた！\n\n私に一番近いのは\n「${c.name}タイプ」でした！\n\nあなたにいちばん近いのは誰？\n\n#ちいかわキャラマッチ`;
   if (navigator.share) {
     try {
