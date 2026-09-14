@@ -1,0 +1,7 @@
+Data/
+releases/
+.build/
+WORKPLAN.md
+chiikawa-character-match_codex_20characters.txt
+node_modules/
+artifacts/
