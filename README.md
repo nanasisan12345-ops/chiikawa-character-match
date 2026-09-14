@@ -93,4 +93,6 @@ HTML / CSS / JavaScript (ES Modules) / GitHub Pages。開発・ローカル起�
 
 ## 確認範囲
 
-Windows Edgeで一連の操作、320〜3840px幅、全20結果、保存・共有の異常系を検証しています。iPhone Safari、Android Chrome、Mac Safari、iPad Safariの実機確認と、公開先の動作・SNS共有は未実施です。共有APIの検証はモックによる呼び出し確認であり、実際のSNS投稿は行っていません。詳細は開発フォルダの `VERIFICATION.md` を参照してください。
+2026年9月14日、GitHub Pagesのデプロイ成功を確認しました。公開URLでも、28問回答・戻る・回答変更・途中再開・TOP3・チャート・再診断までWindows Edgeで確認済みです。ページとOGP画像はHTTP 200で取得でき、OGPには公開先の絶対URLが設定されています。
+
+ローカル検証では320〜3840px幅、全20結果、保存・共有の異常系も確認しています。iPhone Safari、Android Chrome、Mac Safari、iPad Safariの実機確認は未実施です。共有APIの検証はモックによる呼び出し確認であり、実際のSNS投稿は行っていません。詳細は [検証記録](./VERIFICATION.md) を参照してください。

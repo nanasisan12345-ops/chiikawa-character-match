@@ -77,4 +77,13 @@
 
 ## 未検証
 
-iPhone Safari、Android Chrome、Mac Safari、iPad Safariの実機。SNSサービス側のOGPキャッシュ・プレビュー、端末固有のネイティブ共有画面。公開デプロイの結果は公開後に追記する。
+iPhone Safari、Android Chrome、Mac Safari、iPad Safariの実機。SNSサービス側のOGPキャッシュ・プレビュー、端末固有のネイティブ共有画面。
+
+## GitHub Pages公開確認
+
+- 公開URL：https://nanasisan12345-ops.github.io/chiikawa-character-match/
+- 2026-09-14、[初回デプロイ](https://github.com/nanasisan12345-ops/chiikawa-character-match/actions/runs/34821971390)のbuild・deployが成功。
+- 公開URLを `TEST_URL` に指定して `tools/browser-check.mjs` を実行。トップから28問回答、戻る・変更、保存・再開、TOP3・チャート、結果再読み込み、再診断まで成功。JavaScript例外なし。
+- HTTPでページと `images/ogp.png` を取得し、両方200を確認。公開HTMLの `og:url` と `og:image` が上記公開先の絶対URLになっていることを確認。
+- README先頭とGitHubリポジトリのWebsite欄へ公開URLを記載。
+- Windows用 `run.bat` の起動と `Data/browser/` を使うEdge起動経路も確認。配布パッケージは作成しない。
