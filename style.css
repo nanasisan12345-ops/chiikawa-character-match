@@ -1012,5 +1012,14 @@ footer small {
   }
 }
 
-/* Both sister sites expose the destination before the main content. */
-.sister-banner{max-width:1000px;margin:8px auto 24px;padding:0 18px}.sister-banner a{display:flex;justify-content:space-between;align-items:center;gap:20px;text-decoration:none;border:2px solid #b7cba6;border-radius:18px;padding:22px 26px;background:#e6efda;color:#354b34;box-shadow:0 5px 16px #45623410}.sister-banner.pink a{background:#f8e1e9;border-color:#e0b8c8;color:#603f50}.sister-banner small{display:block;font-size:11px;letter-spacing:.07em}.sister-banner strong{display:block;font-size:23px;line-height:1.6;margin:5px 0}.sister-banner span span{font-size:12px;line-height:1.8;display:block}.sister-banner b{flex-shrink:0;border-radius:10px;padding:13px 18px;background:#55744b;color:white;font-size:14px}.sister-banner.pink b{background:#92566f}.sister-banner a:hover{filter:brightness(.97)}.sister-banner a:focus-visible{outline:3px solid #354b34;outline-offset:4px}@media(max-width:600px){.sister-banner a{align-items:stretch;flex-direction:column;gap:14px;padding:18px}.sister-banner strong{font-size:21px}.sister-banner b{text-align:center}.sister-banner{margin-bottom:18px}}@media print{.sister-banner{display:none!important}}
+/* Sister-site card follows the diagnosis content. */
+.sister-banner { max-width: 640px; margin: 0 auto 48px; padding: 0 24px; }
+.sister-banner a { display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; text-decoration: none; border: 1px solid var(--line); border-radius: 28px; padding: 32px; background: linear-gradient(145deg, #fff, #fff6f8); color: var(--ink); box-shadow: 0 12px 32px #755e4a08; }
+.sister-banner small { display: block; color: var(--muted); font-size: 11px; letter-spacing: .08em; }
+.sister-banner strong { display: block; font-size: 24px; line-height: 1.6; margin: 12px 0; }
+.sister-banner span span { display: block; color: var(--muted); font-size: 12px; line-height: 1.9; }
+.sister-banner b { display: block; width: 100%; max-width: 340px; padding: 16px 24px; border: 1px solid #e8b7c6; border-radius: 20px; background: var(--pink); color: #4e3440; font-size: 14px; box-shadow: 0 4px 0 #e6b6c480; }
+.sister-banner a:hover b { background: #f2bdd0; }
+.sister-banner a:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+@media (max-width: 600px) { .sister-banner { padding: 0 18px; margin-bottom: 32px; } .sister-banner a { padding: 26px 20px; } .sister-banner strong { font-size: 21px; } }
+@media print { .sister-banner { display: none !important; } }
